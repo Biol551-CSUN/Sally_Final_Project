@@ -17,5 +17,14 @@ For my final independent project, I will be exploring a public dataset  from Tid
   * [wordcloud](https://github.com/Biol551-CSUN/Sally_Final_Project/tree/main/Scripts/cloud_files)
   * [libs](https://github.com/Biol551-CSUN/Sally_Final_Project/tree/main/Scripts/libs)
  
- * [Output](https://github.com/Biol551-CSUN/Sally_Final_Project/tree/main/Output)
-   * [
+ * [Output](https://github.com/Biol551-CSUN/Sally_Final_Project/tree/main/Output): Includes all the outputs generated for this project
+   * [wordcloud](https://github.com/Biol551-CSUN/Sally_Final_Project/blob/main/Output/cloud.png)
+   * [gttable](https://github.com/Biol551-CSUN/Sally_Final_Project/blob/main/Output/gttabletop10.png)
+   * [packetstyle](https://github.com/Biol551-CSUN/Sally_Final_Project/blob/main/Output/packetstyle.png)
+   * [ramengif](https://github.com/Biol551-CSUN/Sally_Final_Project/blob/main/Output/ramengif.gif)
+  
+  **References:** 
+  
+  1. [TidyTuesdayData](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-06-04)
+  2. [The Ramen Rater](https://www.theramenrater.com/resources-2/the-list/)
+  3. [The Food Republic](https://www.foodrepublic.com/2014/12/02/theres-a-website-that-has-rated-1518-bowls-of-instant-ramen/)
