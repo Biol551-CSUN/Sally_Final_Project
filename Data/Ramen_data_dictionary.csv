@@ -1,0 +1,8 @@
+,,
+variable,class,description
+review_number,integer,"Ramen review number, increasing from 1"
+brand,character,Brand of the ramen
+variety,character,"The ramen variety, eg a flavor, style, ingredient"
+style,character,"Style of container (cup, pack, tray,"
+country,character,Origin country of the ramen brand
+stars,double,"0-5 rating of the ramen, 5 is best, 0 is worst"
