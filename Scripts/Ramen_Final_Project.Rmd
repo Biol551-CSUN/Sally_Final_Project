@@ -1,0 +1,232 @@
+---
+title: "Sally Final Project - How Tasty is your Ramen"
+author: "Sally Heo"
+date: "5/9/2022"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    theme: readable
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE,}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Load Libraries
+```{r}
+#Loading Libraries needed to code
+library(tidyverse)
+library(here)
+library(ggthemes)
+library(gganimate)
+library(htmlwidgets)
+library(webshot)
+library(wordcloud2)
+library(gtExtras)
+library(gt)
+library(wordcloud2)
+library(tidytext)
+library(beyonce)
+```
+
+## Introduction: Instant Ramen
+*For my final project I will be using a public data set from Tidy Tuesday on Instant Ramen Ratings*
+
+* Instant ramen is a classic college dorm snack
+* Convenient, cheap, easily available
+* Delicious, and can get a variety of flavors (chicken, beef, vegetable, miso)
+* No cooking skills required to make instant ramen
+* Time saver!
+
+## Dataset: Ramen Ratings
+
+* Data set from Tidy Tuesday on Ramen Ratings
+* Hans Lienesch
+* Thousand reviews over the years of over 1,500 varieties of instant ramen from all over the world (United States, South East Asia, Canada, United Kingdom, Australia) on his website, **The Ramen Rater**. 
+* Instant ramen is rated from 0-5
+
+## Data Analysis: Which instant ramen is the tastiest?
+
+* Which countries have the best instant ramen? Worst ramen?
+* Which style is preferred (cup, pack, tray, bowl, box) to eat ramen across the world?
+* What are the most common flavors of instant ramen across the world?
+
+## Load Ramen Ratings Data
+* The Ramen Ratings Data is loaded from TidyTuesday
+```{r}
+ramen_ratings <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-06-04/ramen_ratings.csv")
+view(ramen_ratings)#View ramen_ratings data from TidyTuesday
+```
+## Which countries have the best instant ramen?
+* First some data wrangling was done to organize the data
+* Then, I plotted the Ramen Ratings data to show the top 10 countries rated for the best instant ramen
+* Cambodia has the best instant ramen, although it is not that far from other countries such as France, Malaysia, Indonesia, and Singapore. 
+
+```{r, fig.height=14, fig.width=18}
+ramen <- ramen_ratings %>% #Giving object ramen from ramen ratings dataframe
+  drop_na() %>%#Drop all NA's 
+  mutate(country = case_when( #Create a new variable
+    country == "Dubai" ~ "United Arab Emirates",#Change the name of country Dubai to United Arab Emirates
+    country == "Holland" ~ "Netherlands", #Change the name of country Holland to Netherlands
+    country == "Phlippines" ~ "Philippines",#Change the name of country Phlippines to Philippines
+    country == "Sarawak" ~ "Malaysia", #Change the name of country Sarawak to Malaysis
+    country == "UK" ~ "United Kingdom",#Change the name of country UK to United Kingdom
+    TRUE ~ (country)#For country column, change country name
+  )) %>% 
+group_by(country) %>% #Group by country 
+  summarise(stars = mean(stars)) %>% #Summarise by taking the mean of stars variable by country
+  top_n(10, stars) %>% #Get top 10 country based on stars variable
+  mutate(Country_Number = row_number(),#Make a new column called Country_Number
+         country = fct_reorder(country, stars)) %>% #Order by country and stars
+  rename(Country = country, #Rename variable name country to Country
+         Average_Star_Ratings = stars) #Rename variable name stars to Average_Star_Ratings
+view(ramen) #View ramen data
+```
+
+## Table with gt: Top 10 Countries with the best instant ramen
+
+* The gt package is used here to make a gt table to show in table format the top 10 countries with the best instant ramen
+
+```{r}
+gt(ramen) %>% #Make it a gt table
+  gt_theme_538() %>% #Use gt theme 538 for table
+  gt_highlight_rows(row = 2, font_weight = "normal", fill = "red") %>% #Highlight row 2 in gt table in red color and the font as normal 
+  gtsave(here("Output", "gttabletop10.png"))#Save in this Output folder as gttabletop10.png
+```
+
+```{r}
+ramen %>% #Bringing ramen dataframe over 
+  ggplot(aes(x = Average_Star_Ratings, #Plotting x-axis
+             y = Country,#Plotting y-axis
+             fill = Country)) + #Give color by country
+  geom_bar(stat = "identity", color = "black", show.legend = FALSE) + #Geometry bar, hide legend
+  geom_text(aes(label = Average_Star_Ratings), vjust = .1, hjust = 1.05, color = "black", size = 5) + #Label bar graphs with average star ratings
+    theme_few() + #Theme few
+  scale_x_continuous(limits = c(0,5)) + #Setting x-limits
+    labs(title = "Top 10 Best Rated Ramen by Countries", #Giving plot title
+         subtitle = "Average Rating on a 5 star scale", #Adding subtitle to plot
+         x = "Average Star Rating(/5)", #Labeling x-axis
+         y = "Country", #Labeling y-axis
+         caption = "Source: The Ramen Rater") + #Adding caption to plot
+  theme(text = element_text(size = 22, #Changing text size for everything
+                            face = "bold",#Making text size bold
+                            family = "Cambria"),#Changing font to Cambria for everything
+        axis.title = element_text(size = 16, #Changing axis title to a different size
+                                  color = "dodgerblue2"),#Changing axis title color
+        axis.text = element_text(size = 16, #Changing the axis text to a different size
+                                 color = "dodgerblue2"),#Changing color of axis text
+        plot.title = element_text(color = "gray1", #Changing the plot title color
+                                  hjust = 0.5,#Plot title is positioned towards the center
+                                  size = 18), #Changing plot title size
+        plot.subtitle = element_text(color = "gray1", #Changing plot subtitle to gray1
+                                     size = 16, #Changing the plot subtitle size
+                                     hjust = 0.5),#Plot subtitle is positioned towards the center
+        plot.caption = element_text(color = "gray1",#Changing caption color to gray1
+                                    size = 16, #Changing the size of plot caption
+                                    hjust = 0.5)#Plot caption is positioned towards the center
+        ) +
+  transition_reveal(Country_Number)#Reveal animation by country number
+```
+
+## Which style is preferred (cup, pack, tray, bowl, box) to eat ramen across the world?
+
+* The box packet sytle is most preferred out of all the other packet styles with bar, can, and restaurant not being preferred at all. 
+```{r}
+style <- ramen_ratings %>% #Creating object style, from ramen_ratings dataframe
+  drop_na() %>% #Drop all NA's
+  mutate(country = case_when( #Create a new variable
+    country == "Dubai" ~ "United Arab Emirates",#Change country name from Dubai to United Arab Emirates
+    country == "Holland" ~ "Netherlands",#Change country name from Holland to Netherlands
+    country == "Phlippines" ~ "Philippines",#Change country name from Phlippines to Philippines
+    country == "Sarawak" ~ "Malaysia",#Change country name from Sarawak to Malaysia
+    country == "UK" ~ "United Kingdom",#Change country name from UK to United Kingdom
+    TRUE ~ (country)#From country column, change country name
+)) %>%
+  select(stars, style, country) %>% #Extract these columns
+group_by(style, country) %>% #Group by style and country
+  summarise(stars = mean(stars)) %>% #Summarise by Average of stars
+  filter(country == "Australia" | country == "Canada" | country == "China" | country == "Hong Kong" | country == "Indonesia" | country == "Japan" | country == "Malaysia" | country == "Philippines" | country == "Singapore" | country == "South Korea" | country == "Taiwan" | country == "Thailand" | country == "United Kingdom" | country == "United States" | country == "Vietnam")#Filter out these countries 
+view(style) #View style data
+```
+```{r, fig.height=14, fig.width=18}
+style %>% #Bringing style dataframe over
+  ggplot(aes(x = style,#Plot x-axis style
+             y = stars,#Plot y-axis stars
+             fill = style, #Color according to style
+             )) +
+  geom_boxplot(show.legend = FALSE, width = 0.5) + #Geometry box plot
+  scale_fill_manual(values = beyonce_palette(74)) + #Using beyonce color palette
+  theme_solarized() + #Using theme_solarized
+  theme(text = element_text(size = 18, #changing text size to 18 for everything
+                            face = "bold"), #Making text size bold for eveything
+        axis.title = element_text(size = 18, #changing axis title to different size
+                                  color = "midnightblue"), #changing axis title color
+        axis.text = element_text(size = 18, #changing the x and y axis text to a certain size
+                                 color = "black"),#changing the axis.text color to black
+        plot.title = element_text(color = "mediumblue",#changing plot title color
+                                  hjust = 0.5, #Plot title is positioned towards the center
+                                  size = 18),#changing plot title size
+        plot.subtitle = element_text(color = "royalblue1", #changing plot subtitle to black
+                                     size = 18,#changing size to 18
+                                     hjust = 0.5),#Subtitle positioned towards the center
+        plot.caption = element_text(color = "gray3",#changing caption color to gray3
+                                    size = 18, #changing the size to 18
+                                    hjust = 0.5)) +#caption is positioned towards the center
+  scale_y_continuous(limits = c(0,5)) + #Setting y-axis limits from 0 to 5
+  labs(title = "The preferred style to each instant ramen across the world",#Giving title
+       subtitle = "Box is the most preferred style",#Giving subtitle
+       caption = "Source: The Ramen Rater", #Give caption
+       x = "Packet Style",#Giving label to x-axis
+       y = "Average Star Ratings")#Giving label to y-axis
+ggsave(here("Output", "packetstyle.png"), #Save here in this directory
+       width = 20, height = 14)#Adjusting width and height of figure inches
+```
+
+
+## What are the most popular flavors of instant ramen across the world?
+
+* First I will use the tidytext package to make the text tidy and to make sure there is only one word (token) per row
+* unnest_tokens() allows there to be one word per row
+* The most popular flavors of instant ramen across the world:
+1. Chicken 
+2. Spicy 
+3. Beef
+4. Soup
+5. Cup
+
+```{r}
+ramyun <- ramen_ratings %>% #Giving object ramyun from ramen ratings data
+  unnest_tokens(word, variety) %>% #add a column named word, from variety variable
+  anti_join(stop_words, by = "word") %>% #Remove unnecessary words and get dataframe without the stopwords
+  count(word, sort = TRUE) %>% #count the most ccommon words
+  filter(n < 407) %>% #Take only if there are less than 407 instances of the words
+  slice(1:100)#Take the top 100
+view(ramyun) #View new ramyun data
+```
+
+## Word cloud - Popular flavors of instant ramen (Top 100)
+
+```{r}
+cloud <- wordcloud2(data = ramyun,#Making a word cloud with ramyun data
+                    size = 0.8, #Size of word cloud
+                    color = "random-light", #Applying color
+                    backgroundColor = "black", #Make the background black
+                    shape = 'star')#Making the word cloud shape a star
+saveWidget(cloud, "cloud.html", selfcontained = F)#Save the widget as a html
+webshot("cloud.html", "cloud.png",#Saving widget output as png
+        delay = 5, #Capture after the delay of five seconds
+        vwidth = 900, vheight = 900)#Adjusting the width and height of png output
+```
+
+## References
+
+* [Tidy Tuesday Data: Ramen Ratings](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-06-04)
+* [The Ramen Rater](https://www.theramenrater.com/resources-2/the-list/)
+* [The Food Republic](https://www.foodrepublic.com/2014/12/02/theres-a-website-that-has-rated-1518-bowls-of-instant-ramen/)
+
+
+
+
